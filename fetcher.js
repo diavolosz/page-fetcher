@@ -2,7 +2,13 @@
 
 const request = require("request")
 const fs = require("fs")
+const readline = require("readline");
 
+
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
 
 let args = process.argv.splice(2)
 
@@ -16,11 +22,39 @@ request(`${url}`, (error, response, body) => {
     process.exit()
   }
 
-  fs.writeFile(`${fileSavePath}`, body, err => {
-    if (err) {
-      console.error(`error: file path invalid \n ${err}`);
+  if (fs.existsSync(`${fileSavePath}`)) {
+    rl.question("Woud you like to overwrite? Y or N      ", (key) => {
+      if (key === "n" || key === "N") {
+        console.log("File path exists:", `${fileSavePath}`);
+        rl.close ()
+      } else if ((key === "y" || key === "Y")){
+        fs.writeFile(`${fileSavePath}`, body, err => {
+          if (err) {
+            console.error(`error: file path invalid \n ${err}`);
+            process.exit()
+          } 
+          // file written successfully
+          console.log(`Overwritten files at ${fileSavePath}`)
+          rl.close()
+        });
+      }
+    })
+  }
+
+  if (!fs.existsSync(`${fileSavePath}`)) {
+    fs.writeFile(`${fileSavePath}`, body, err => {
+      if (err) {
+        console.error(`error: file path invalid \n ${err}`);
+        process.exit()
+      } 
+      // file written successfully
+      console.log(`New file created at ${fileSavePath}`)
       process.exit()
-    }
-    // file written successfully
+    });
+  }
+
+  rl.on("close", function() {
+    console.log("BYE BYE !!!");
+    process.exit(0);
   });
 });
